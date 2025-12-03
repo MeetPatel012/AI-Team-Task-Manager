@@ -3,9 +3,13 @@
 import { use, useState } from "react";
 import { useProject } from "@/lib/hooks/useProjects";
 import { useProjectTasks } from "@/lib/hooks/useTasks";
+import { useAuthStore } from "@/store/useAuthStore";
 import { KanbanBoard } from "@/components/task/kanban-board";
 import { NewTaskDialog } from "@/components/task/new-task-dialog";
 import { TaskDetailSheet } from "@/components/task/task-detail-sheet";
+import { EditProjectDialog } from "@/components/project/edit-project-dialog";
+import { ArchiveProjectDialog } from "@/components/project/archive-project-dialog";
+import { ProjectMembers } from "@/components/project/project-members";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
@@ -18,6 +22,7 @@ export default function ProjectDetailPage({
 }) {
   const { projectId } = use(params);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const { user } = useAuthStore();
   const {
     data: projectData,
     isLoading: projectLoading,
@@ -31,6 +36,17 @@ export default function ProjectDetailPage({
 
   const project = projectData?.project;
   const tasks = tasksData?.tasks || [];
+
+  // Check if user can edit project (owner or manager)
+  const canEditProject =
+    user &&
+    project &&
+    (project.owner._id === user.id ||
+      project.members.some(
+        (member: { user: { _id: string }; role: string }) =>
+          member.user._id === user.id &&
+          (member.role === "owner" || member.role === "manager")
+      ));
 
   if (projectLoading || tasksLoading) {
     return (
@@ -97,7 +113,18 @@ export default function ProjectDetailPage({
             )}
           </div>
         </div>
-        <NewTaskDialog projectId={projectId} project={project} />
+        <div className="flex gap-2">
+          {canEditProject && (
+            <>
+              <EditProjectDialog project={project} />
+              <ArchiveProjectDialog
+                projectId={project._id}
+                projectName={project.name}
+              />
+            </>
+          )}
+          <NewTaskDialog projectId={projectId} project={project} />
+        </div>
       </div>
 
       {/* Kanban Board */}
@@ -131,6 +158,9 @@ export default function ProjectDetailPage({
           <KanbanBoard tasks={tasks} onTaskClick={setSelectedTask} />
         )}
       </div>
+
+      {/* Project Members */}
+      <ProjectMembers project={project} canManageMembers={!!canEditProject} />
 
       {/* Task Detail Sheet */}
       <TaskDetailSheet

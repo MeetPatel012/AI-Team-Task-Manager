@@ -83,3 +83,94 @@ export function useProject(id: string) {
     enabled: !!id,
   });
 }
+
+export function useUpdateProject() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<Project>;
+    }) => {
+      const response = await api.projects.update(id, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate specific project and projects list
+      queryClient.invalidateQueries({ queryKey: ["project", variables.id] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+}
+
+export function useDeleteProject() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await api.projects.delete(id);
+      return response.data;
+    },
+    onSuccess: () => {
+      // Invalidate projects list to remove archived project
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+    },
+  });
+}
+
+export function useAddMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      userId,
+      email,
+      role,
+    }: {
+      projectId: string;
+      userId?: string;
+      email?: string;
+      role: string;
+    }) => {
+      const response = await api.projects.addMember(projectId, {
+        userId,
+        email,
+        role,
+      });
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate project to refresh members list
+      queryClient.invalidateQueries({
+        queryKey: ["project", variables.projectId],
+      });
+    },
+  });
+}
+
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      userId,
+    }: {
+      projectId: string;
+      userId: string;
+    }) => {
+      const response = await api.projects.removeMember(projectId, userId);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate project to refresh members list
+      queryClient.invalidateQueries({
+        queryKey: ["project", variables.projectId],
+      });
+    },
+  });
+}

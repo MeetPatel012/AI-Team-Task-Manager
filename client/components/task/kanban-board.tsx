@@ -14,7 +14,7 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 import { KanbanColumn } from "./kanban-column";
 import { TaskCard } from "./task-card";
-import { Task, useReorderTask } from "@/lib/hooks/useTasks";
+import { Task, useReorderTask, useDeleteTask } from "@/lib/hooks/useTasks";
 
 interface KanbanBoardProps {
   tasks: Task[];
@@ -30,6 +30,7 @@ const columns = [
 export function KanbanBoard({ tasks, onTaskClick }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const reorderTask = useReorderTask();
+  const deleteTask = useDeleteTask();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -117,6 +118,15 @@ export function KanbanBoard({ tasks, onTaskClick }: KanbanBoardProps) {
     }
   };
 
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      await deleteTask.mutateAsync(taskId);
+    } catch (error) {
+      alert("Failed to delete task. Please try again.");
+      console.error("Delete task error:", error);
+    }
+  };
+
   return (
     <DndContext
       sensors={sensors}
@@ -132,6 +142,7 @@ export function KanbanBoard({ tasks, onTaskClick }: KanbanBoardProps) {
             status={column.id}
             tasks={getTasksByStatus(column.id)}
             onTaskClick={onTaskClick}
+            onTaskDelete={handleTaskDelete}
           />
         ))}
       </div>
@@ -139,7 +150,11 @@ export function KanbanBoard({ tasks, onTaskClick }: KanbanBoardProps) {
       <DragOverlay>
         {activeTask ? (
           <div className="opacity-80">
-            <TaskCard task={activeTask} onClick={() => {}} />
+            <TaskCard
+              task={activeTask}
+              onClick={() => {}}
+              onDelete={() => {}}
+            />
           </div>
         ) : null}
       </DragOverlay>

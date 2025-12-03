@@ -3,12 +3,14 @@ import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Calendar, GripVertical } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, GripVertical, Trash2 } from "lucide-react";
 import { Task } from "@/lib/hooks/useTasks";
 
 interface TaskCardProps {
   task: Task;
   onClick: () => void;
+  onDelete: (taskId: string) => void;
 }
 
 const priorityColors = {
@@ -18,7 +20,7 @@ const priorityColors = {
   urgent: "bg-red-500",
 };
 
-export function TaskCard({ task, onClick }: TaskCardProps) {
+export function TaskCard({ task, onClick, onDelete }: TaskCardProps) {
   const {
     attributes,
     listeners,
@@ -51,6 +53,18 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
       .slice(0, 2);
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this task? This action cannot be undone."
+    );
+
+    if (confirmed) {
+      onDelete(task._id);
+    }
+  };
+
   return (
     <Card
       ref={setNodeRef}
@@ -70,6 +84,14 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
           <div className="flex-1 min-w-0">
             <h4 className="font-medium text-sm line-clamp-2">{task.title}</h4>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 hover:bg-red-50 hover:text-red-600"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-3 pt-0 pl-9">

@@ -11,6 +11,7 @@ interface KanbanColumnProps {
   status: string;
   tasks: Task[];
   onTaskClick: (task: Task) => void;
+  onTaskDelete: (taskId: string) => void;
 }
 
 const statusColors = {
@@ -24,6 +25,7 @@ export function KanbanColumn({
   status,
   tasks,
   onTaskClick,
+  onTaskDelete,
 }: KanbanColumnProps) {
   const { setNodeRef } = useDroppable({
     id: status,
@@ -56,6 +58,7 @@ export function KanbanColumn({
                 key={task._id}
                 task={task}
                 onClick={() => onTaskClick(task)}
+                onDelete={onTaskDelete}
               />
             ))}
           </div>

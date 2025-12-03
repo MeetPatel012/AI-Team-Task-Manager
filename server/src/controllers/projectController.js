@@ -248,24 +248,35 @@ const deleteProject = async (req, res, next) => {
 const addMember = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { userId: newUserId, role } = req.body;
+    const { userId: newUserId, email, role } = req.body;
     const currentUserId = req.user.id;
 
-    // Validate input
-    if (!newUserId || !role) {
+    // Validate input - at least one identifier is required
+    if ((!newUserId && !email) || !role) {
       return res.status(400).json({
         success: false,
-        message: 'userId and role are required',
+        message: 'Either userId or email is required, along with role',
       });
     }
 
-    // Check if new user exists
-    const userExists = await User.findById(newUserId);
-    if (!userExists) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found',
-      });
+    // Find user by ID or email
+    let userToAdd;
+    if (email) {
+      userToAdd = await User.findOne({ email: email.toLowerCase() });
+      if (!userToAdd) {
+        return res.status(404).json({
+          success: false,
+          message: 'User with this email not found',
+        });
+      }
+    } else {
+      userToAdd = await User.findById(newUserId);
+      if (!userToAdd) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found',
+        });
+      }
     }
 
     const project = await Project.findById(id);
@@ -290,7 +301,7 @@ const addMember = async (req, res, next) => {
     }
 
     // Check if user is already a member
-    const alreadyMember = project.members.some(m => m.user.toString() === newUserId);
+    const alreadyMember = project.members.some(m => m.user.toString() === userToAdd._id.toString());
     if (alreadyMember) {
       return res.status(400).json({
         success: false,
@@ -300,7 +311,7 @@ const addMember = async (req, res, next) => {
 
     // Add member
     project.members.push({
-      user: newUserId,
+      user: userToAdd._id,
       role,
     });
 

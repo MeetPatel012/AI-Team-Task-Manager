@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
 export default function ProjectsPage() {
-  const { data, isLoading, error } = useProjects();
+  const { data, isLoading, error } = useProjects({ status: "active" });
 
   return (
     <div>

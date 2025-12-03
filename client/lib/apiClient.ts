@@ -60,8 +60,10 @@ export const api = {
     create: (data: any) => apiClient.post("/projects", data),
     update: (id: string, data: any) => apiClient.patch(`/projects/${id}`, data),
     delete: (id: string) => apiClient.delete(`/projects/${id}`),
-    addMember: (id: string, data: { userId: string; role: string }) =>
-      apiClient.post(`/projects/${id}/members`, data),
+    addMember: (
+      id: string,
+      data: { userId?: string; email?: string; role: string }
+    ) => apiClient.post(`/projects/${id}/members`, data),
     removeMember: (id: string, userId: string) =>
       apiClient.delete(`/projects/${id}/members/${userId}`),
   },
