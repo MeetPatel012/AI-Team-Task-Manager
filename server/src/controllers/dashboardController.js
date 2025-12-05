@@ -1,5 +1,6 @@
 const Project = require('../models/Project');
 const Task = require('../models/Task');
+const mongoose = require('mongoose');
 
 /**
  * Get dashboard overview statistics
@@ -27,7 +28,7 @@ const getDashboardOverview = async (req, res, next) => {
     // 3. Get tasks grouped by status
     const tasksByStatusAgg = await Task.aggregate([
       {
-        $match: { assignee: userId }
+        $match: { assignee: new mongoose.Types.ObjectId(userId) }
       },
       {
         $group: {
@@ -52,11 +53,14 @@ const getDashboardOverview = async (req, res, next) => {
 
     // 4. Get upcoming tasks (due in next 7 days)
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today (midnight)
+    
     const nextWeek = new Date();
     nextWeek.setDate(today.getDate() + 7);
+    nextWeek.setHours(23, 59, 59, 999); // End of the 7th day
 
     const upcomingTasks = await Task.find({
-      assignee: userId,
+      assignee: new mongoose.Types.ObjectId(userId),
       dueDate: {
         $gte: today,
         $lte: nextWeek,
